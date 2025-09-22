@@ -7,11 +7,12 @@ def empleado_inventario_ui(inventario, usuario, opciones_valde, guardar_inventar
     st.header("Inventario")
     fecha_carga = st.date_input("Selecciona la fecha de carga", value=date.today(), key="fecha_inv")
 
-    # Inicializar registro de productos actualizados en la sesión
-    if "productos_actualizados" not in st.session_state:
-        st.session_state.productos_actualizados = {}
-    
     tabs = st.tabs(list(inventario.keys()))
+    
+    # Inicializar registro de productos cargados si no existe
+    if "productos_cargados" not in st.session_state:
+        st.session_state.productos_cargados = {}
+        
     for i, categoria in enumerate(inventario.keys()):
         with tabs[i]:
             productos = inventario[categoria]
@@ -21,11 +22,8 @@ def empleado_inventario_ui(inventario, usuario, opciones_valde, guardar_inventar
                 key=f"sel_{categoria}"
             )
 
-            modo_actualizacion = st.radio(
-                "¿Deseas añadir a la cantidad existente o reemplazarla?",
-                ("Añadir", "Reemplazar"),
-                key=f"modo_{categoria}_{producto_seleccionado}"
-            )
+            # Eliminamos la opción de modo de actualización (Añadir/Reemplazar)
+            # Ahora solo se permite modificación directa
 
             if categoria == "Por Kilos":
                 st.markdown("### Selecciona la cantidad de baldes a registrar:")
@@ -63,16 +61,30 @@ def empleado_inventario_ui(inventario, usuario, opciones_valde, guardar_inventar
                     # Solo guarda los baldes seleccionados
                     productos[producto_seleccionado] = estados_baldes.copy()
                     guardar_inventario(inventario)
+                    
+                    # Registrar que este producto fue actualizado por el usuario
+                    if categoria not in st.session_state.productos_cargados:
+                        st.session_state.productos_cargados[categoria] = {}
+                    st.session_state.productos_cargados[categoria][producto_seleccionado] = estados_baldes
+                    
                     guardar_historial(
-                        fecha_carga, usuario, categoria, producto_seleccionado, estados_baldes, modo_actualizacion
+                        fecha_carga, usuario, categoria, producto_seleccionado, estados_baldes, "Modificar"
                     )
-                    
-                    # Registrar este producto como actualizado
-                    if categoria not in st.session_state.productos_actualizados:
-                        st.session_state.productos_actualizados[categoria] = {}
-                    st.session_state.productos_actualizados[categoria][producto_seleccionado] = estados_baldes.copy()
-                    
                     st.success(f"Actualizado. Estado actual: {', '.join(estados_baldes)}")
+
+                # Mostrar solo productos cargados por este empleado en esta sesión
+                if st.session_state.productos_cargados.get(categoria):
+                    st.subheader("Productos que has cargado:")
+                    for p, c in st.session_state.productos_cargados[categoria].items():
+                        if isinstance(c, list):
+                            estados_no_vacios = [x for x in c if x != "Vacío"]
+                            estados_vacios = [x for x in c if x == "Vacío"]
+                            if estados_no_vacios:
+                                st.write(f"- {p}: {', '.join(estados_no_vacios)}")
+                            else:
+                                st.write(f"- {p}: Todos vacíos")
+                        else:
+                            st.write(f"- {p}: {c}")
 
             else:
                 cantidad = st.number_input("Cantidad (unidades)", min_value=0, step=1, key=f"cant_{categoria}_{producto_seleccionado}")
@@ -81,31 +93,25 @@ def empleado_inventario_ui(inventario, usuario, opciones_valde, guardar_inventar
                     key=f"btn_{categoria}_{producto_seleccionado}"
                 ):
                     cantidad = max(0, int(cantidad))
-                    if modo_actualizacion == "Añadir":
-                        productos[producto_seleccionado] += cantidad
-                    else:
-                        productos[producto_seleccionado] = cantidad
+                    # Siempre reemplaza el valor (ya no hay opción de añadir)
+                    productos[producto_seleccionado] = cantidad
                     guardar_inventario(inventario)
+                    
+                    # Registrar que este producto fue actualizado por el usuario
+                    if categoria not in st.session_state.productos_cargados:
+                        st.session_state.productos_cargados[categoria] = {}
+                    st.session_state.productos_cargados[categoria][producto_seleccionado] = cantidad
+                    
                     guardar_historial(
-                        fecha_carga, usuario, categoria, producto_seleccionado, cantidad, modo_actualizacion
+                        fecha_carga, usuario, categoria, producto_seleccionado, cantidad, "Modificar"
                     )
-                    
-                    # Registrar este producto como actualizado
-                    if categoria not in st.session_state.productos_actualizados:
-                        st.session_state.productos_actualizados[categoria] = {}
-                    st.session_state.productos_actualizados[categoria][producto_seleccionado] = productos[producto_seleccionado]
-                    
                     st.success(f"Actualizado. Nuevo stock: {productos[producto_seleccionado]}")
-            
-            # Mostrar solo los productos actualizados para esta categoría
-            if categoria in st.session_state.productos_actualizados and st.session_state.productos_actualizados[categoria]:
-                st.subheader("Productos que has actualizado:")
-                for p, estado in st.session_state.productos_actualizados[categoria].items():
-                    if isinstance(estado, list):  # Para "Por Kilos"
-                        estados_mostrar = [e for e in estado if e != "Vacío"] or ["Vacío"]
-                        st.write(f"- {p}: {', '.join(estados_mostrar)}")
-                    else:  # Para unidades
-                        st.write(f"- {p}: {estado if estado > 0 else 'Vacío'}")
+
+                # Mostrar solo productos cargados por este empleado en esta sesión
+                if st.session_state.productos_cargados.get(categoria):
+                    st.subheader("Productos que has cargado:")
+                    for p, c in st.session_state.productos_cargados[categoria].items():
+                        st.write(f"- {p}: {c if c > 0 else 'Vacío'}")
 
 def empleado_delivery_ui(usuario, cargar_catalogo_delivery, guardar_venta_delivery, cargar_ventas_delivery):
     st.header("Delivery")
