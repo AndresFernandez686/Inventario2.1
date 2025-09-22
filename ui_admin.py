@@ -4,9 +4,11 @@ from utils import df_to_csv_bytes
 import pandas as pd
 
 def admin_inventario_ui(inventario):
-    # Se eliminan títulos, subtítulos y totales. Solo se muestran los botones de descarga de Excel (CSV).
+    # Muestra tablas para cada categoría y botones de descarga
     for categoria, productos in inventario.items():
-        # Para Por Kilos, guarda el detalle por balde en el CSV
+        st.subheader(f"Categoría: {categoria}")
+        
+        # Crear DataFrame según la categoría
         if categoria == "Por Kilos":
             productos_csv = []
             for producto, baldes in productos.items():
@@ -22,6 +24,11 @@ def admin_inventario_ui(inventario):
                 "Producto": list(productos.keys()),
                 "Cantidad": list(productos.values())
             })
+        
+        # Mostrar tabla
+        st.dataframe(df)
+        
+        # Botón de descarga
         csv_bytes = df_to_csv_bytes(df)
         st.download_button(
             label=f"Descargar CSV de {categoria}",
