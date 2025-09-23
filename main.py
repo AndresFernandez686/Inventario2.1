@@ -11,7 +11,7 @@ from auth import login
 from ui_empleado import empleado_inventario_ui, empleado_delivery_ui
 from ui_admin import admin_inventario_ui, admin_historial_ui, admin_delivery_ui
 
-# Datos base 
+# Datos base (corregidos y actualizados)
 productos_por_categoria = {
     "Impulsivo": {
         "Caja almendrado": 0,
