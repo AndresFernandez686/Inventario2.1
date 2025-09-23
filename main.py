@@ -11,7 +11,7 @@ from auth import login
 from ui_empleado import empleado_inventario_ui, empleado_delivery_ui
 from ui_admin import admin_inventario_ui, admin_historial_ui, admin_delivery_ui
 
-# Datos base (corregidos y actualizados)
+# Datos base 
 productos_por_categoria = {
     "Impulsivo": {
         "Caja almendrado": 0,
@@ -151,8 +151,7 @@ def main():
     usuario, rol = login()
 
     if not (usuario and rol):
-        st.title("Por favor, ingresa un usuario válido en el panel lateral para continuar.")
-        st.info("Usuarios de ejemplo: empleado1, empleado2, empleado3, admin1")
+        # Se ha eliminado el mensaje de aviso
         return
 
     inventario = cargar_inventario(productos_por_categoria)
@@ -172,7 +171,7 @@ def main():
     elif rol == 'administrador':
         tab_inv, tab_hist, tab_deliv = st.tabs(["📦 Inventario", "📅 Historial", "🛠️ Delivery"])
         with tab_inv:
-            admin_inventario_ui(inventario)  # <-- CAMBIO: asegúrate de que admin_inventario_ui espere y maneje la estructura de inventario correctamente
+            admin_inventario_ui(inventario)
         with tab_hist:
             admin_historial_ui(cargar_historial())
         with tab_deliv:
