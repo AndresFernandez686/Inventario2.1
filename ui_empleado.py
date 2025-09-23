@@ -28,8 +28,8 @@ def empleado_inventario_ui(inventario, usuario, opciones_valde, guardar_inventar
                 num_baldes = st.number_input(
                     "Cantidad de baldes",
                     min_value=1,
-                    max_value=6,
-                    value=6,
+                    max_value=10,  # Cambiado de 6 a 10
+                    value=1,       # Cambiado de 6 a 1 para que comience con el mínimo
                     step=1,
                     key=f"num_baldes_{producto_seleccionado}_{fecha_carga}_{usuario}"
                 )
